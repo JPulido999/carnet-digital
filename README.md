@@ -4,10 +4,11 @@
 Este documento explica cómo preparar el entorno para correr un proyecto **Spring Boot con Java 17, Maven y MySQL** en Windows.  
 
 ---
+## ✅ 1. Spring boot 3.5.3
 
 ## ✅ 1. Instalar Java 17 (JDK)
 
-1. Descargar **Eclipse Temurin (Adoptium) JDK 17** desde:  
+1. Descargar **Eclipse Temurin (Adoptium) JDK 17 (Temurin 17.0.16) desde:  
    👉 [https://adoptium.net/temurin/releases/](https://adoptium.net/temurin/releases/)  
 
 2. Seleccionar:
@@ -26,7 +27,7 @@ Este documento explica cómo preparar el entorno para correr un proyecto **Sprin
    ```
    Debe mostrar algo como:  
    ```
-   openjdk version "17.0.xx"
+   openjdk version "17 (Temurin 17.0.16)"
    ```
 
 ---
@@ -58,10 +59,10 @@ Este documento explica cómo preparar el entorno para correr un proyecto **Sprin
 
 ---
 
-## ✅ 3. Instalar MySQL
+## ✅ 3. Instalar PostgreeSQL
 
-1. Descargar el instalador de MySQL Community Server:  
-   👉 [https://dev.mysql.com/downloads/mysql/](https://dev.mysql.com/downloads/mysql/)  
+1. Descargar el instalador de Postgree Server version 16.10:  
+   👉 [https://www.enterprisedb.com/downloads/postgres-postgresql-downloads](https://www.enterprisedb.com/downloads/postgres-postgresql-downloads)  
 
 2. Durante la instalación:  
    - Elegir **Developer Default**.  
