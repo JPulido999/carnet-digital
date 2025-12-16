@@ -9,12 +9,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -33,7 +34,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        // Si ya hay autenticación, no tocarla
+        // Si ya hay autenticación, continuar
         if (SecurityContextHolder.getContext().getAuthentication() != null) {
             filterChain.doFilter(request, response);
             return;
@@ -54,6 +55,8 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         }
 
         String correo = jwtService.extraerCorreo(token);
+        String rol = jwtService.extraerRol(token);
+
         var usuarioOpt = usuarioRepository.findByCorreo(correo);
 
         if (usuarioOpt.isEmpty()) {
@@ -68,9 +71,12 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        // Autenticar con el objeto Usuario (puedes cambiar a un DTO o principal personalizado)
+        // Convertir rol a autoridad de Spring
+        List<SimpleGrantedAuthority> authorities =
+                List.of(new SimpleGrantedAuthority("ROLE_" + rol));
+
         UsernamePasswordAuthenticationToken auth =
-                new UsernamePasswordAuthenticationToken(usuario, null, Collections.emptyList());
+                new UsernamePasswordAuthenticationToken(usuario, null, authorities);
 
         SecurityContextHolder.getContext().setAuthentication(auth);
         filterChain.doFilter(request, response);

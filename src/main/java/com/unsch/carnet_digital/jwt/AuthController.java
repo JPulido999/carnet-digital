@@ -25,13 +25,12 @@ public class AuthController {
     public void loginSuccess(@AuthenticationPrincipal OAuth2User user,
                              HttpServletResponse response) throws IOException {
 
-        // Obtener email de forma robusta
         String correo = null;
+
         if (user != null && user.getAttributes() != null) {
             Object o = user.getAttributes().get("email");
             if (o != null) correo = o.toString();
             else {
-                // fallback: algunos proveedores devuelven "emailAddress" u otras claves
                 o = user.getAttributes().get("emailAddress");
                 if (o != null) correo = o.toString();
             }
@@ -56,10 +55,10 @@ public class AuthController {
             return;
         }
 
-        // Generar JWT propio
-        String token = jwtService.generarToken(correo);
+        // Generar JWT incluyendo el rol del usuario
+        String token = jwtService.generarToken(usuario);
 
-        // Redirigir al front con token (puedes usar fragment o postMessage en producción)
+        // Redirigir al frontend
         response.sendRedirect("http://localhost:5173/?token=" + token);
     }
 }

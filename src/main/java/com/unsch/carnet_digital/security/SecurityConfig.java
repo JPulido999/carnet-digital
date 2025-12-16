@@ -8,44 +8,63 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+
 
 @Configuration
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtFilter;
+    private final CustomUserDetailsService customUserDetailsService;
+    private final ClientRegistrationRepository clientRegistrationRepository;
 
-    public SecurityConfig(JwtAuthFilter jwtFilter) {
+    public SecurityConfig(JwtAuthFilter jwtFilter,
+                CustomUserDetailsService customUserDetailsService,
+                ClientRegistrationRepository clientRegistrationRepository
+        ) {
         this.jwtFilter = jwtFilter;
-    }
+        this.customUserDetailsService = customUserDetailsService;
+        this.clientRegistrationRepository = clientRegistrationRepository;
+        }
+
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
         return http
-                // ⭐ ACTIVAMOS EL CORS QUE USA TU CorsConfigurationSource()
                 .cors(Customizer.withDefaults())
-
                 .csrf(csrf -> csrf.disable())
 
                 .authorizeHttpRequests(auth -> auth
-                        // Rutas públicas
                         .requestMatchers(
                                 "/oauth2/**",
                                 "/loginSuccess",
                                 "/error",
                                 "/auth/**",
-                                "/control_ph/**" // ⭐ Importante para permitir las imágenes
+                                "/control_ph/**"
                         ).permitAll()
+
+                        // solo vigilantes pueden verificar QR
+                        .requestMatchers("/verificacion/**").hasRole("VIGILANTE")
 
                         .anyRequest().authenticated()
                 )
 
-                // Login de Google
                 .oauth2Login(oauth -> oauth
+                        .authorizationEndpoint(auth -> auth
+                                .authorizationRequestResolver(
+                                        new CustomAuthorizationRequestResolver(
+                                                clientRegistrationRepository,
+                                                "/oauth2/authorization"
+                                        )
+                                )
+                        )
                         .defaultSuccessUrl("/loginSuccess", true)
                 )
 
-                // JWT
+                // Aquí conectamos nuestro UserDetailsService
+                .userDetailsService(customUserDetailsService)
+
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
 
                 .build();

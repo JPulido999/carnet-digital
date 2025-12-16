@@ -5,6 +5,8 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.unsch.carnet_digital.model.Usuario;
+
 import java.security.Key;
 import java.util.Date;
 
@@ -14,14 +16,15 @@ public class JwtService {
     private static final long EXPIRATION = 1000L * 60 * 60 * 24; // 24 horas
     private final Key key;
 
-    // Asegúrate de definir jwt.secret en application.properties (min 32 chars)
+    // jwt.secret debe tener mínimo 32 caracteres
     public JwtService(@Value("${jwt.secret}") String secret) {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generarToken(String correo) {
+    public String generarToken(Usuario usuario) {
         return Jwts.builder()
-                .setSubject(correo)
+                .setSubject(usuario.getCorreo())
+                .claim("rol", usuario.getRol())      // ← Agregamos el rol dentro del token
                 .setIssuer("carnet-digital")
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
@@ -36,6 +39,15 @@ public class JwtService {
                 .parseClaimsJws(token)
                 .getBody()
                 .getSubject();
+    }
+
+    public String extraerRol(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .get("rol", String.class);
     }
 
     public boolean validarToken(String token) {
