@@ -7,6 +7,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.beans.factory.annotation.Value;
+
 import java.util.Map;
 
 @RestController
@@ -16,6 +18,9 @@ public class CarnetController {
 
     private final BarcodeService barcodeService;
     private final QRService qrService;
+
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
 
     public CarnetController(BarcodeService barcodeService, QRService qrService) {
         this.barcodeService = barcodeService;
@@ -29,11 +34,13 @@ public class CarnetController {
         }
 
         try {
+
+
             // Barcode con DNI
             String barcodeBase64 = barcodeService.generarCode128Base64(usuario.getDni(), 600, 150);
 
             // 👉 URL de verificación (esta página será escaneada por vigilantes)
-            String urlVerificacion = "https://miapp.com/verificacion/" + usuario.getDni();
+            String urlVerificacion = frontendUrl + "/verificacion/" + usuario.getUuidVerificacion();
 
             // Generar QR basado en esa URL
             String qrBase64 = qrService.generarQRCodeBase64(urlVerificacion, 260, 260);

@@ -3,6 +3,7 @@ package com.unsch.carnet_digital.model;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Data
 @Entity
@@ -48,5 +49,12 @@ public class Usuario {
 
     @Column(name = "uuid_verificacion", unique = true, length = 80)
     private String uuidVerificacion;
+
+    @PrePersist
+    public void generarUuidVerificacion() {
+        if (this.uuidVerificacion == null) {
+            this.uuidVerificacion = UUID.randomUUID().toString();
+        }
+    }
 
 }

@@ -12,6 +12,10 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     Optional<Usuario> findByDni(String dni);
 
+    Optional<Usuario> findByUuidVerificacion(String uuidVerificacion);
+
+    Optional<Usuario> findByCodigoEstudiante(String codigo);
+
     boolean existsByCorreo(String correo);
 
     boolean existsByDni(String dni);
