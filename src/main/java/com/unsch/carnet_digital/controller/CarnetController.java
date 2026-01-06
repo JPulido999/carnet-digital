@@ -3,13 +3,14 @@ package com.unsch.carnet_digital.controller;
 import com.unsch.carnet_digital.model.Usuario;
 import com.unsch.carnet_digital.service.BarcodeService;
 import com.unsch.carnet_digital.service.QRService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import org.springframework.beans.factory.annotation.Value;
-
+import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/carnet")
@@ -29,40 +30,73 @@ public class CarnetController {
 
     @GetMapping("/me")
     public ResponseEntity<?> obtenerCarnet(@AuthenticationPrincipal Usuario usuario) {
+
         if (usuario == null) {
             return ResponseEntity.status(401).body(Map.of("error", "No autenticado"));
         }
 
         try {
+            /* ===============================
+               1. Código carnet (estudiante o vigilante)
+               =============================== */
+            String codigoCarnet =
+                    (usuario.getCodigoEstudiante() != null && !usuario.getCodigoEstudiante().isBlank())
+                            ? usuario.getCodigoEstudiante()
+                            : usuario.getDni();
 
+            if (codigoCarnet == null) {
+                throw new RuntimeException("Usuario sin DNI ni código");
+            }
 
-            // Barcode con DNI
-            String barcodeBase64 = barcodeService.generarCode128Base64(usuario.getDni(), 600, 150);
+            /* ===============================
+               2. UUID verificación
+               =============================== */
+            if (usuario.getUuidVerificacion() == null) {
+                usuario.setUuidVerificacion(UUID.randomUUID().toString());
+            }
 
-            // 👉 URL de verificación (esta página será escaneada por vigilantes)
-            String urlVerificacion = frontendUrl + "/verificacion/" + usuario.getUuidVerificacion();
+            /* ===============================
+               3. Foto carnet
+               =============================== */
+            String fotoCarnet =
+                    (usuario.getFotoCarnetUrl() != null && !usuario.getFotoCarnetUrl().isBlank())
+                            ? usuario.getFotoCarnetUrl()
+                            : "default.jpg";
 
-            // Generar QR basado en esa URL
-            String qrBase64 = qrService.generarQRCodeBase64(urlVerificacion, 260, 260);
+            /* ===============================
+               4. Generar códigos
+               =============================== */
+            String barcodeBase64 =
+                    barcodeService.generarCode128Base64(codigoCarnet, 600, 150);
 
-            // Devolver datos del carnet
-            var data = Map.of(
-                    "id", usuario.getId(),
-                    "nombres", usuario.getNombres(),
-                    "apellidos", usuario.getApellidos(),
-                    "dni", usuario.getDni(),
-                    "correo", usuario.getCorreo(),
-                    "codigoEstudiante", usuario.getCodigoEstudiante(),
-                    "escuela", usuario.getEscuela(),
-                    "fotoCarnetUrl", usuario.getFotoCarnetUrl(),
-                    "barcodeBase64", barcodeBase64,
-                    "qrBase64", qrBase64  // 👈 NUEVO
-            );
+            String urlVerificacion =
+                    frontendUrl + "/verificacion/" + usuario.getUuidVerificacion();
+
+            String qrBase64 =
+                    qrService.generarQRCodeBase64(urlVerificacion, 260, 260);
+
+            /* ===============================
+               5. RESPUESTA SEGURA (SIN Map.of)
+               =============================== */
+            Map<String, Object> data = new HashMap<>();
+
+            data.put("id", usuario.getId());
+            data.put("nombres", usuario.getNombres());
+            data.put("apellidos", usuario.getApellidos());
+            data.put("dni", usuario.getDni());
+            data.put("correo", usuario.getCorreo());
+            data.put("codigoEstudiante", codigoCarnet);
+            data.put("escuela", usuario.getEscuela()); // puede ser null
+            data.put("fotoCarnetUrl", fotoCarnet);
+            data.put("barcodeBase64", barcodeBase64);
+            data.put("qrBase64", qrBase64);
 
             return ResponseEntity.ok(data);
 
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", "Error generando el carnet"));
+            e.printStackTrace();
+            return ResponseEntity.status(500)
+                    .body(Map.of("error", e.getMessage()));
         }
     }
 }

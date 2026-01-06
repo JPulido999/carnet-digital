@@ -54,10 +54,10 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
 
-        String correo = jwtService.extraerCorreo(token);
+        Long usuarioId = jwtService.extraerUsuarioId(token);
         String rol = jwtService.extraerRol(token);
 
-        var usuarioOpt = usuarioRepository.findByCorreo(correo);
+        var usuarioOpt = usuarioRepository.findById(usuarioId);
 
         if (usuarioOpt.isEmpty()) {
             response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Usuario no registrado");

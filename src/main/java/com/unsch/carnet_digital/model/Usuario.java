@@ -38,11 +38,18 @@ public class Usuario {
     @Column(name = "foto_google_url", columnDefinition = "TEXT")
     private String fotoGoogleUrl; // opcional: foto obtenida desde Google
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 30)
-    private String rol = "";
+    private RolUsuario rol;
 
     @Column(name = "fecha_creacion", nullable = false)
     private LocalDateTime fechaCreacion = LocalDateTime.now();
+
+    @Column(name = "fecha_inicio_vigencia", nullable = false)
+    private LocalDateTime fechaInicioVigencia;
+
+    @Column(name = "fecha_fin_vigencia")
+    private LocalDateTime fechaFinVigencia;
 
     @Column(name = "activo", nullable = false)
     private boolean activo = true;
@@ -50,11 +57,14 @@ public class Usuario {
     @Column(name = "uuid_verificacion", unique = true, length = 80)
     private String uuidVerificacion;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "tipo_autenticacion", nullable = false, length = 20)
+    private TipoAutenticacion tipoAutenticacion;
+
     @PrePersist
     public void generarUuidVerificacion() {
-        if (this.uuidVerificacion == null) {
+        if (this.uuidVerificacion == null || this.uuidVerificacion.isBlank()) {
             this.uuidVerificacion = UUID.randomUUID().toString();
         }
     }
-
 }

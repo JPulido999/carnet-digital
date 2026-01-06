@@ -23,13 +23,24 @@ public class JwtService {
 
     public String generarToken(Usuario usuario) {
         return Jwts.builder()
-                .setSubject(usuario.getCorreo())
+                .setSubject(usuario.getId().toString())
                 .claim("rol", usuario.getRol())      // ← Agregamos el rol dentro del token
                 .setIssuer("carnet-digital")
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION))
                 .signWith(key)
                 .compact();
+    }
+
+    public Long extraerUsuarioId(String token) {
+        return Long.parseLong(
+            Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject()
+        );
     }
 
     public String extraerCorreo(String token) {

@@ -2,10 +2,10 @@ package com.unsch.carnet_digital.service;
 
 import com.unsch.carnet_digital.model.Usuario;
 import com.unsch.carnet_digital.repository.UsuarioRepository;
-
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class UsuarioService {
@@ -22,12 +22,14 @@ public class UsuarioService {
             throw new RuntimeException("El correo ya está registrado.");
         }
 
-        if (repository.existsByDni(usuario.getDni())) {
+        if (usuario.getDni() != null && repository.existsByDni(usuario.getDni())) {
             throw new RuntimeException("El DNI ya está registrado.");
         }
 
-        // por defecto se crea activo
         usuario.setActivo(true);
+
+        // ✅ UUID SIEMPRE
+        usuario.setUuidVerificacion(UUID.randomUUID().toString());
 
         return repository.save(usuario);
     }
@@ -36,18 +38,6 @@ public class UsuarioService {
 
         Usuario usuario = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-
-        // Si el correo cambió, validar
-        if (!usuario.getCorreo().equals(datos.getCorreo())
-                && repository.existsByCorreo(datos.getCorreo())) {
-            throw new RuntimeException("El correo ya está registrado.");
-        }
-
-        // Si el DNI cambió, validar
-        if (!usuario.getDni().equals(datos.getDni())
-                && repository.existsByDni(datos.getDni())) {
-            throw new RuntimeException("El DNI ya está registrado.");
-        }
 
         usuario.setNombres(datos.getNombres());
         usuario.setApellidos(datos.getApellidos());
@@ -68,21 +58,18 @@ public class UsuarioService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
     }
 
-    // --- MÉTODO NORMAL (si lo necesitas)
     public Usuario buscarPorCorreo(String correo) {
         return repository.findByCorreo(correo)
                 .orElseThrow(() -> new RuntimeException("No existe usuario con ese correo"));
     }
 
-    // --- MÉTODO PARA LOGIN Google Sign-In ---
-    // SOLO permite usuarios ACTIVOS
     public Usuario buscarActivoPorCorreo(String correo) {
 
         Usuario usuario = repository.findByCorreo(correo)
-                .orElseThrow(() -> new RuntimeException("Correo no registrado en el sistema."));
+                .orElseThrow(() -> new RuntimeException("Correo no registrado."));
 
         if (!usuario.isActivo()) {
-            throw new RuntimeException("Usuario inactivo. Acceso denegado.");
+            throw new RuntimeException("Usuario inactivo.");
         }
 
         return usuario;
@@ -98,9 +85,6 @@ public class UsuarioService {
     }
 
     public void eliminar(Long id) {
-        if (!repository.existsById(id)) {
-            throw new RuntimeException("Usuario no encontrado");
-        }
         repository.deleteById(id);
     }
 }

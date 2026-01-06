@@ -25,12 +25,14 @@ public class VerificacionService {
 
         Usuario usuario;
 
-        if (dni != null) {
-            usuario = usuarioRepository.findByDni(dni)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        } else if (codigo != null) {
-            usuario = usuarioRepository.findByCodigoEstudiante(codigo)
-                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+        if (dni != null && !dni.trim().isEmpty()) {
+            usuario = usuarioRepository.findByDni(dni.trim())
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        } else if (codigo != null && !codigo.trim().isEmpty()) {
+            usuario = usuarioRepository.findByCodigoEstudiante(codigo.trim())
+                    .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
         } else {
             throw new RuntimeException("Debe proporcionar DNI o código");
         }
@@ -38,13 +40,14 @@ public class VerificacionService {
         return mapToDTO(usuario);
     }
 
+
     private VerificacionUsuarioDTO mapToDTO(Usuario usuario) {
     return new VerificacionUsuarioDTO(
             usuario.getNombres(),
             usuario.getApellidos(),
             usuario.getDni(),
             usuario.getCodigoEstudiante(),
-            usuario.getRol(),              // si es String
+            usuario.getRol().name(),             // si es String
             usuario.getEscuela(),
             usuario.getFotoCarnetUrl()
     );

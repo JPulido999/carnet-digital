@@ -41,6 +41,7 @@ public class SecurityConfig {
                                 "/loginSuccess",
                                 "/error",
                                 "/auth/**",
+                                "/auth/local/**",
                                 "/control_ph/**"
                         ).permitAll()
 
